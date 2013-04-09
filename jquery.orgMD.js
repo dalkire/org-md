@@ -25,27 +25,66 @@
   function orgMDkeydown(e) {
     var $target = $(e.currentTarget);
     var selection = $target.getSelection();
-    console.log('keypress: ', e);
 
     if (!e.altKey || (e.keyCode != LEFT && e.keyCode != RIGHT && e.keyCode != UP && e.keyCode != DOWN)) {
       return;
     }
 
-    // var currLine = getCurrLine($target, selection);
-    // var nextLine = getNextLine($target, selection);
-    var currAndNext = getCurrentAndNext($target, selection);
-    if (e.keyCode == RIGHT) {
-      var currentLine = currAndNext.contentArr[currAndNext.current];
+    var currentAndNext = getCurrentAndNext($target, selection);
 
-      currAndNext.contentArr[currAndNext.current] = '#' + currentLine;
+    if (e.keyCode == RIGHT) {
+      hierDown(e, $target, currentAndNext);
+    }
+    else if (e.keyCode == LEFT) {
+      hierUp(e, $target, currentAndNext);
     }
 
-    $target.val(currAndNext.contentArr.join('\n'));
-    setCaretToPos(e.currentTarget, selection.start);
     e.stopPropagation();
     e.preventDefault();
-    // console.log('currLine: ', currLine);
-    // console.log('nextLine: ', nextLine);
+  }
+
+  // If appropriate, move line down in the Markdown hierarchy
+  function hierDown(e, $target, currentAndNext) {
+    var currentLine = currentAndNext.contentArr[currentAndNext.current];
+    var nextLine    = currentAndNext.contentArr[currentAndNext.next];
+    var atMax = currentLine.match(/^#{5}#+/);
+    var offset = 0;
+
+    if (!atMax) {
+      if (currentLine.match(/^#/)) {
+        currentAndNext.contentArr[currentAndNext.current] = '#' + currentLine;
+        offset = 1;
+      }
+      else {
+        currentAndNext.contentArr[currentAndNext.current] = '# ' + currentLine;          
+        offset = 2;
+      }
+
+      $target.val(currentAndNext.contentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currentAndNext.selection.start + offset);
+    }
+  }
+
+  // If appropriate, move line up in the Markdown hierarchy
+  function hierUp(e, $target, currentAndNext) {
+    var currentLine = currentAndNext.contentArr[currentAndNext.current];
+    var nextLine    = currentAndNext.contentArr[currentAndNext.next];
+    var atMin = currentLine.match(/^[^#]/);
+    var offset = 0;
+
+    if (!atMin) {
+      if (currentLine.match(/^# /)) {
+        currentAndNext.contentArr[currentAndNext.current] = currentLine.substr(2);
+        offset = 2;
+      }
+      else {
+        currentAndNext.contentArr[currentAndNext.current] = currentLine.substr(1);
+        offset = 1;
+      }
+
+      $target.val(currentAndNext.contentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currentAndNext.selection.start - offset);
+    }
   }
 
   function getCurrentAndNext($target, selection) {
@@ -69,7 +108,8 @@
     return {
       current: current,
       next: next,
-      contentArr: contentArr
+      contentArr: contentArr,
+      selection: selection
     };
   }
 
