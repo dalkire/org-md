@@ -2,4 +2,13 @@
   background-color: #EEE;
   width: 500px;
   height: 300px;
+  font-family: "Andale Mono", Monaco, Courier;
+  font-size: 13px;
+}
+
+#my-editor-preview {
+  float: right;
+  width: 500px;
+  height: 300px;
+  overflow-y: scroll;
 }

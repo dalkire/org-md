@@ -31,7 +31,7 @@
     }
 
     var currentAndNext = getCurrentAndNext($target, selection);
-
+console.log(currentAndNext);
     if (e.keyCode == RIGHT) {
       hierDown(e, $target, currentAndNext);
     }
@@ -93,14 +93,15 @@
     var pos = 0;
     var current = 0;
     var next = 0;
+    var point = selection.start;
 
     for (var i = 0; i < contentArr.length; i++) {
-      if (pos <= selection.start && selection.start < (pos + contentArr[i].length)) {
+      if (pos <= point && point <= (pos + contentArr[i].length)) {
         current = i;
         break;
       }
 
-      pos = pos + contentArr[i].length;
+      pos = pos + contentArr[i].length + 1;
     }
 
     next = contentArr[current + 1] ? current + 1 : current;
