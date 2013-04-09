@@ -47,21 +47,13 @@
   function hierDown(e, $target, currentAndNext) {
     var currentLine = currentAndNext.contentArr[currentAndNext.current];
     var nextLine    = currentAndNext.contentArr[currentAndNext.next];
-    var atMax = currentLine.match(/^#{5}#+/);
-    var offset = 0;
+    var atMax = currentLine.match(/^#{6,}/);
 
-    if (!atMax) {
-      if (currentLine.match(/^#/)) {
-        currentAndNext.contentArr[currentAndNext.current] = '#' + currentLine;
-        offset = 1;
-      }
-      else {
-        currentAndNext.contentArr[currentAndNext.current] = '# ' + currentLine;          
-        offset = 2;
-      }
+    if (!atMax && currentLine.match(/^#/)) {
+      currentAndNext.contentArr[currentAndNext.current] = '#' + currentLine;
 
       $target.val(currentAndNext.contentArr.join('\n'));
-      setCaretToPos(e.currentTarget, currentAndNext.selection.start + offset);
+      setCaretToPos(e.currentTarget, currentAndNext.selection.start + 1);
     }
   }
 
@@ -69,21 +61,13 @@
   function hierUp(e, $target, currentAndNext) {
     var currentLine = currentAndNext.contentArr[currentAndNext.current];
     var nextLine    = currentAndNext.contentArr[currentAndNext.next];
-    var atMin = currentLine.match(/^[^#]/);
-    var offset = 0;
+    var notMin = currentLine.match(/^#{2,}/);
 
-    if (!atMin) {
-      if (currentLine.match(/^# /)) {
-        currentAndNext.contentArr[currentAndNext.current] = currentLine.substr(2);
-        offset = 2;
-      }
-      else {
-        currentAndNext.contentArr[currentAndNext.current] = currentLine.substr(1);
-        offset = 1;
-      }
+    if (notMin) {
+      currentAndNext.contentArr[currentAndNext.current] = currentLine.substr(1);
 
       $target.val(currentAndNext.contentArr.join('\n'));
-      setCaretToPos(e.currentTarget, currentAndNext.selection.start - offset);
+      setCaretToPos(e.currentTarget, currentAndNext.selection.start - 1);
     }
   }
 
