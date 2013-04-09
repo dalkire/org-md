@@ -31,7 +31,7 @@
     }
 
     var currentAndNext = getCurrentAndNext($target, selection);
-console.log(currentAndNext);
+
     if (e.keyCode == RIGHT) {
       hierDown(e, $target, currentAndNext);
     }
