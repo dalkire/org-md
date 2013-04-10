@@ -1,4 +1,5 @@
 (function($) {
+  var ENTER = 13;
   var LEFT  = 37;
   var UP    = 38;
   var RIGHT = 39;
@@ -25,8 +26,15 @@
   function orgMDkeydown(e) {
     var $target = $(e.currentTarget);
     var selection = $target.getSelection();
+    var keyArr = [
+      LEFT,
+      RIGHT,
+      UP,
+      DOWN,
+      ENTER
+    ];
 
-    if (!e.altKey || (e.keyCode != LEFT && e.keyCode != RIGHT && e.keyCode != UP && e.keyCode != DOWN)) {
+    if (!e.altKey || $.inArray(e.keyCode, keyArr) == -1) {
       return;
     }
 
@@ -37,6 +45,9 @@
     }
     else if (e.keyCode == LEFT) {
       hierUp(e, $target, currentAndNext);
+    }
+    else if (e.keyCode == ENTER) {
+      hierNext(e, $target, currentAndNext);
     }
 
     e.stopPropagation();
@@ -71,6 +82,20 @@
     }
   }
 
+  function hierNext(e, $target, currentAndNext) {
+    var currentLine = currentAndNext.contentArr[currentAndNext.current];
+    var nextLine    = currentAndNext.contentArr[currentAndNext.next];
+    var hasHier = !currentLine.match(/^#{7,}/) && currentLine.match(/^#{1,6}/);
+
+    if (hasHier) {
+      var diff = currentAndNext.next - currentAndNext.current;
+      currentAndNext.contentArr.splice(currentAndNext.next, 0, hasHier[0] + ' ');
+
+      $target.val(currentAndNext.contentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currentAndNext.selection.start + hasHier[0].length + 1 + diff);
+    }
+  }
+
   function getCurrentAndNext($target, selection) {
     var content = $target.val();
     var contentArr = content.split('\n');
@@ -88,7 +113,7 @@
       pos = pos + contentArr[i].length + 1;
     }
 
-    next = contentArr[current + 1] ? current + 1 : current;
+    next = current + 1;
 
     return {
       current: current,
