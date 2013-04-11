@@ -140,11 +140,14 @@
     var nxtIndexAtLvl = getNxtIndexAtLvl(currNxt.contentArr, currNxt.current);
 
     if (prevIndexAtLvl !== null) {
-      var newContentArr = currNxt.contentArr;
+      var newContentArr = [];
       var currBlock = newContentArr.splice(currNxt.current, nxtIndexAtLvl - currNxt.current - 1);
 
-      newContentArr.splice(prevIndexAtLvl, 0, currBlock.join(','));
-console.log('newContentArr; ', newContentArr);
+      newContentArr = newContentArr.concat(currNxt.contentArr.slice(0, prevIndexAtLvl));
+      newContentArr = newContentArr.concat(currNxt.contentArr.slice(currNxt.current, nxtIndexAtLvl));
+      newContentArr = newContentArr.concat(currNxt.contentArr.slice(prevIndexAtLvl, currNxt.current));
+      newContentArr = newContentArr.concat(currNxt.contentArr.slice(nxtIndexAtLvl));
+
       $target.val(newContentArr.join('\n'));
       setCaretToPos(e.currentTarget, currNxt.selection.start - 1);
     }
