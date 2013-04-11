@@ -38,65 +38,148 @@
       return;
     }
 
-    var currentAndNext = getCurrentAndNext($target, selection);
+    var currNxt = getCurrNxt($target, selection);
+    var currLn = currNxt.contentArr[currNxt.current];
+    var hier = !currLn.match(/^#{7,}/) && currLn.match(/^#{1,6}/);
+
+    if (hier) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
 
     if (e.keyCode == RIGHT) {
-      hierDown(e, $target, currentAndNext);
+      hierRight(e, $target, currNxt);
     }
     else if (e.keyCode == LEFT) {
-      hierUp(e, $target, currentAndNext);
+      hierLeft(e, $target, currNxt);
+    }
+    else if (e.keyCode == UP) {
+      hierUp(e, $target, currNxt);
+    }
+    else if (e.keyCode == DOWN) {
+      hierDown(e, $target, currNxt);
     }
     else if (e.keyCode == ENTER) {
-      hierNext(e, $target, currentAndNext);
+      hierEnter(e, $target, currNxt);
     }
 
-    e.stopPropagation();
-    e.preventDefault();
   }
 
   // If appropriate, move line down in the Markdown hierarchy
-  function hierDown(e, $target, currentAndNext) {
-    var currentLine = currentAndNext.contentArr[currentAndNext.current];
-    var nextLine    = currentAndNext.contentArr[currentAndNext.next];
-    var atMax = currentLine.match(/^#{6,}/);
+  function hierRight(e, $target, currNxt) {
+    var currLn = currNxt.contentArr[currNxt.current];
+    var nextLine    = currNxt.contentArr[currNxt.next];
+    var atMax = currLn.match(/^#{6,}/);
 
-    if (!atMax && currentLine.match(/^#/)) {
-      currentAndNext.contentArr[currentAndNext.current] = '#' + currentLine;
+    if (!atMax && currLn.match(/^#/)) {
+      currNxt.contentArr[currNxt.current] = '#' + currLn;
 
-      $target.val(currentAndNext.contentArr.join('\n'));
-      setCaretToPos(e.currentTarget, currentAndNext.selection.start + 1);
+      $target.val(currNxt.contentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currNxt.selection.start + 1);
     }
   }
 
   // If appropriate, move line up in the Markdown hierarchy
-  function hierUp(e, $target, currentAndNext) {
-    var currentLine = currentAndNext.contentArr[currentAndNext.current];
-    var nextLine    = currentAndNext.contentArr[currentAndNext.next];
-    var notMin = currentLine.match(/^#{2,}/);
+  function hierLeft(e, $target, currNxt) {
+    var currLn = currNxt.contentArr[currNxt.current];
+    var nextLine = currNxt.contentArr[currNxt.next];
+    var hier = !currLn.match(/^#{7,}/) && currLn.match(/^#{1,6}/);
+    var notMin = currLn.match(/^#{2,}/);
 
     if (notMin) {
-      currentAndNext.contentArr[currentAndNext.current] = currentLine.substr(1);
+      currNxt.contentArr[currNxt.current] = currLn.substr(1);
 
-      $target.val(currentAndNext.contentArr.join('\n'));
-      setCaretToPos(e.currentTarget, currentAndNext.selection.start - 1);
+      $target.val(currNxt.contentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currNxt.selection.start - 1);
+    }
+
+  }
+
+  function getPrevIndexAtLvl(contentArr, currIndex) {
+    var currLn = contentArr[currIndex];
+    var hier = !currLn.match(/^#{7,}/) && currLn.match(/^#{1,6}/);
+
+    if (hier) {
+      for (var i = currIndex - 1; i >= 0; i--) {
+        var ln = contentArr[i];
+        var lnHier = !ln.match(/^#{7,}/) && ln.match(/^#{1,6}/);
+
+        if (lnHier[0] == hier[0]) {
+          return i;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function getNxtIndexAtLvl(contentArr, currIndex) {
+    var currLn = contentArr[currIndex];
+    var hier = !currLn.match(/^#{7,}/) && currLn.match(/^#{1,6}/);
+
+    if (hier) {
+      for (var i = currIndex + 1; i < contentArr.length; i++) {
+        var ln = contentArr[i];
+        var lnHier = !ln.match(/^#{7,}/) && ln.match(/^#{1,6}/);
+
+        if (lnHier == hier) {
+          return i;
+        }
+      }
+    }
+
+    return contentArr.length;
+  }
+
+  // If appropriate, move line up in the Markdown hierarchy
+  function hierUp(e, $target, currNxt) {
+    var currLn = currNxt.contentArr[currNxt.current];
+    var nextLine = currNxt.contentArr[currNxt.next];
+    var hier = !currLn.match(/^#{7,}/) && currLn.match(/^#{1,6}/);
+    var prevIndexAtLvl = getPrevIndexAtLvl(currNxt.contentArr, currNxt.current);
+    var nxtIndexAtLvl = getNxtIndexAtLvl(currNxt.contentArr, currNxt.current);
+
+    if (prevIndexAtLvl !== null) {
+      var newContentArr = currNxt.contentArr;
+      var currBlock = newContentArr.splice(currNxt.current, nxtIndexAtLvl - currNxt.current - 1);
+
+      newContentArr.splice(prevIndexAtLvl, 0, currBlock.join(','));
+console.log('newContentArr; ', newContentArr);
+      $target.val(newContentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currNxt.selection.start - 1);
     }
   }
 
-  function hierNext(e, $target, currentAndNext) {
-    var currentLine = currentAndNext.contentArr[currentAndNext.current];
-    var nextLine    = currentAndNext.contentArr[currentAndNext.next];
-    var hasHier = !currentLine.match(/^#{7,}/) && currentLine.match(/^#{1,6}/);
+  // If appropriate, move line up in the Markdown hierarchy
+  function hierDown(e, $target, currNxt) {
+    var currLn = currNxt.contentArr[currNxt.current];
+    var nextLine = currNxt.contentArr[currNxt.next];
+    var hier = !currLn.match(/^#{7,}/) && currLn.match(/^#{1,6}/);
+    var notMin = currLn.match(/^#{2,}/);
 
-    if (hasHier) {
-      var diff = currentAndNext.next - currentAndNext.current;
-      currentAndNext.contentArr.splice(currentAndNext.next, 0, hasHier[0] + ' ');
+    if (notMin) {
+      currNxt.contentArr[currNxt.current] = currLn.substr(1);
 
-      $target.val(currentAndNext.contentArr.join('\n'));
-      setCaretToPos(e.currentTarget, currentAndNext.selection.start + hasHier[0].length + 1 + diff);
+      $target.val(currNxt.contentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currNxt.selection.start - 1);
     }
   }
 
-  function getCurrentAndNext($target, selection) {
+  function hierEnter(e, $target, currNxt) {
+    var currLn = currNxt.contentArr[currNxt.current];
+    var nextLine = currNxt.contentArr[currNxt.next];
+    var hier = !currLn.match(/^#{7,}/) && currLn.match(/^#{1,6}/);
+
+    if (hier) {
+      var diff = currNxt.next - currNxt.current;
+      currNxt.contentArr.splice(currNxt.next, 0, hier[0] + ' ');
+
+      $target.val(currNxt.contentArr.join('\n'));
+      setCaretToPos(e.currentTarget, currNxt.selection.start + hier[0].length + 1 + diff);
+    }
+  }
+
+  function getCurrNxt($target, selection) {
     var content = $target.val();
     var contentArr = content.split('\n');
     var pos = 0;

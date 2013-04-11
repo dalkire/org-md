@@ -1,9 +1,10 @@
 (function($) {
   $(function() {
     $('#my-editor').orgMD();
-    $('a#preview').click(function() {
-      $('#my-editor-preview').html(markdown.toHTML($('#my-editor').val()));
-      return false;
+    $('#my-editor').keyup(function(e) {
+      var html = markdown.toHTML($('#my-editor').val());
+
+      $('#my-editor-preview').html(html);
     });
   });
 })(jQuery);
